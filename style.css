@@ -8,6 +8,7 @@
     font-family: "Montserrat", sans-serif;
 }
 
+/* Login Page Styles */
 .login-body {
     display: flex;
     justify-content: center;
@@ -93,4 +94,47 @@ button:hover {
 .form-box a:hover {
     text-decoration: underline;
     transition: 0.3s ease;
+}
+
+/* index page styles */
+
+.index-body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(to right, #A2C8DB, #A2C8DB);
+    color: #333;
+}
+
+.index-header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr; /* logo | search | icons */
+    border-bottom: 2px solid black;
+    padding: 20px;
+    background: #77a1b6;
+}
+
+
+.logo {
+    justify-self: start;
+    margin: 20px 0 0 30px;
+    font-size: 16px;
+}
+.search-bar {
+    display: flex;
+    justify-self: center;
+    width: 400px;
+    margin: 20px 0 0 0;
+}
+
+.header-icons {
+    display: flex;
+    justify-self: end;
+    gap: 30px;
+    font-size: 24px;
+    margin: 30px 20px 0 0;
+}
+
+.header-icons i {
+    color:#fff;
+    cursor: pointer;
 }
