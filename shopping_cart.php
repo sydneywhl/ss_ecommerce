@@ -58,35 +58,20 @@
 // replace this with data fetched from the backend/session/database,
 // e.g. const cartItems = await fetch('/api/cart').then(res => res.json());
 
-let cartItems = [
-    {
-        id: 1,
-        name: "Wireless Headphones",
-        price: 49.99,
-        image: "https://placehold.co/120x120",
-        quantity: 1
-    },
-    {
-        id: 2,
-        name: "Cotton T-Shirt",
-        price: 19.99,
-        image: "https://placehold.co/120x120",
-        quantity: 2
-    },
-    {
-        id: 3,
-        name: "Desk Lamp",
-        price: 29.99,
-        image: "https://placehold.co/120x120",
-        quantity: 1
-    }
-];
+// ---- LOAD CART FROM LOCALSTORAGE (instead of hardcoded placeholder array) ----
+let cartItems = JSON.parse(localStorage.getItem('cart')) || [];
+
 const SHIPPING_FEE = 5.00;
 
 const cartItemsContainer = document.getElementById('cartItems');
 const subtotalEl = document.getElementById('subtotal');
 const shippingEl = document.getElementById('shipping');
 const totalEl = document.getElementById('total');
+
+// ---- HELPER: save current cart state back to localStorage ----
+function saveCart() {
+    localStorage.setItem('cart', JSON.stringify(cartItems));
+}
 
 function renderCart() {
     if (cartItems.length === 0) {
@@ -153,5 +138,11 @@ cartItemsContainer.addEventListener('click', (e) => {
 renderCart();
 </script>
 
-        </section>
-    </main>
+    </section>
+</main>
+
+<!--everywhere you see localStorage.setItem('cart', ...) in the code, 
+that's a placeholder for what will eventually be a fetch() call to your friend's PHP backend. 
+The moment that backend exists, you'd swap those localStorage lines for real API calls, 
+and barely touch the rest of your rendering logic.
+-->

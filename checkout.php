@@ -27,24 +27,89 @@
     <main>
         <section class="checkout-section">
 
-        <aside class="checkout-box">
-        <h3>Order Summary</h3>
-            <span>Subtotal</span>
-            <span id="subtotal">RM0.00</span>
-        </div>
-        <div class="summary-row">
-            <span>Shipping</span>
-            <span id="shipping">RM0.00</span>
-        </div>
-        <div class="total-row">
-            <span>Total</span>
-            <span id="total">RM0.00</span>
-        </div>
-        <button class="pay-btn">Pay</button>
-        <a href="shopping_cart.php" class="back-btn">
-            <p>Go back</p>
-        </a>
+            <!-- Order items being purchased -->
+            <div class="checkout-items" id="checkoutItems">
+                <!-- injected by JS -->
+            </div>
+
+            <aside class="checkout-box">
+                <h3>Order Summary</h3>
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span id="subtotal">RM0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Shipping</span>
+                    <span id="shipping">RM0.00</span>
+                </div>
+                <div class="total-row">
+                    <span>Total</span>
+                    <span id="total">RM0.00</span>
+                </div>
+                <button class="pay-btn" id="payBtn">Pay</button>
+                <a href="shopping_cart.php" class="back-btn">
+                    <p>Go back</p>
+                </a>
+            </aside>
+
         </section>
     </main>
+
+<script>
+// ---- LOAD CART FROM LOCALSTORAGE (same source as shopping_cart.php) ----
+const cartItems = JSON.parse(localStorage.getItem('cart')) || [];
+
+const SHIPPING_FEE = 5.00;
+
+const checkoutItemsContainer = document.getElementById('checkoutItems');
+const subtotalEl = document.getElementById('subtotal');
+const shippingEl = document.getElementById('shipping');
+const totalEl = document.getElementById('total');
+const payBtn = document.getElementById('payBtn');
+
+function renderCheckout() {
+    if (cartItems.length === 0) {
+        checkoutItemsContainer.innerHTML = `<p class="empty-cart">Your cart is empty.</p>`;
+        payBtn.disabled = true;
+        return;
+    }
+
+    checkoutItemsContainer.innerHTML = cartItems.map(item => `
+        <div class="checkout-item">
+            <img src="${item.image}" alt="${item.name}">
+            <div class="checkout-item-info">
+                <h4>${item.name}</h4>
+                <p>Qty: ${item.quantity}</p>
+            </div>
+            <p class="item-total">RM${(item.price * item.quantity).toFixed(2)}</p>
+        </div>
+    `).join('');
+
+    updateSummary();
+}
+
+function updateSummary() {
+    const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const shipping = cartItems.length > 0 ? SHIPPING_FEE : 0;
+    const total = subtotal + shipping;
+
+    subtotalEl.textContent = `RM${subtotal.toFixed(2)}`;
+    shippingEl.textContent = `RM${shipping.toFixed(2)}`;
+    totalEl.textContent = `RM${total.toFixed(2)}`;
+}
+
+// ---- PAY BUTTON (placeholder — no backend yet) ----
+payBtn.addEventListener('click', () => {
+    alert('Payment successful! (placeholder — no backend yet)');
+
+    // Clear the cart after "payment"
+    localStorage.removeItem('cart');
+
+    window.location.href = 'index.php';
+});
+
+// ---- INITIAL RENDER ----
+renderCheckout();
+</script>
 </body>
 </html>
