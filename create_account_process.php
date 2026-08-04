@@ -14,7 +14,7 @@ if(!empty($_POST)){
     }
 
     #saving new user's data
-    $new_user = "insert into user (username, password)
+    $new_user = "insert into users (username, password)
     values ('".$_POST['username']."','".$_POST['password']."')";
 
     #executing the query
