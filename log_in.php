@@ -6,15 +6,12 @@
     <link rel="stylesheet" href="style.css">
     <title>Document</title>
 </head>
-<body>
+<body class="login-body">
     <main>
         <section>   
 
         <div class="logo-container">
-            <h1>ambatubas cummerce</h1>
-        </div>
-
-        <div class="bg-image">
+            <h1>SS E-commerce</h1>
         </div>
 
         <div class="form-box">
@@ -27,15 +24,13 @@
 
                 <input type="text" name="username" placeholder="Username" required><br>
                 <input type="password" name="password" placeholder="Password" required>
-
+                <a href="create_account.php">Don't have an account? Sign up now!</a>
                 <div class="button-container">
                     <button type="submit" name="login">Login</button>
                 </div>
 
             </form>
         </div>
-        
-
         </section>
     </main>
 </body>
