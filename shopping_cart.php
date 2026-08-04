@@ -27,9 +27,6 @@
     <main>
         <section class="cart-section">
             <h2>Your Cart</h2>
-            <a href="index.php" class="continue-shopping">
-                <i class="fas fa-arrow-left"></i> Continue Shopping
-            </a>
             <div class="cart-layout">
                 <!-- Cart items -->
                 <div class="cart-items" id="cartItems">
@@ -51,7 +48,8 @@
                         <span>Total</span>
                         <span id="total">RM0.00</span>
                     </div>
-                    <button class="checkout-btn">Proceed to Checkout</button>
+                    <a href="checkout.php" class="checkout-btn">Proceed to Checkout</a>
+                    <a href="index.php" class="continue-shopping">Continue Shopping</a>
                 </aside>
             </div>
 
