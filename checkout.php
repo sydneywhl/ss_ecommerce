@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <title>Checkout</title>
+    <title>Checkout | SS_ECOMMERCE</title>
 </head>
 <body class="checkout-body">
     <header class="index-header">
@@ -20,7 +20,7 @@
 
         <div class="header-icons">
             <a href="shopping_cart.php"><i class="fas fa-shopping-cart"></i></a>
-            <a href="log_in.php"><i class="fas fa-user"></i></a>
+            <a href="log_out.php"><i class="fas fa-user"></i></a>
         </div>
     </header>
 
@@ -55,9 +55,43 @@
         </section>
     </main>
 
+<?php
+    session_start();
+    include("connection.php");
+    include("session_check.php");
+
+    $load_user_id = "select user_id from users where username = '".$_SESSION['username']."'";
+    $execute_user_id = mysqli_query($condb, $load_user_id);
+    $user_row = mysqli_fetch_assoc($execute_user_id);
+    $user_id = $user_row['user_id'];
+
+    $load_shopping_cart = "select product.product_id, product.product_name, product.product_price,
+                        product.product_img, cart_item.item_quantity
+                        from cart_item, shopping_cart, users, product
+                        where cart_item.cart_id = shopping_cart.cart_id
+                        and users.user_id = shopping_cart.user_id
+                        and cart_item.product_id = product.product_id
+                        and shopping_cart.user_id = '$user_id'";
+    $execute_shopping_cart = mysqli_query($condb, $load_shopping_cart);
+
+    $cart_items_array = [];
+
+    if (mysqli_num_rows($execute_shopping_cart) > 0){
+        while ($n = mysqli_fetch_array($execute_shopping_cart)){
+            $cart_items_array[] = array(
+                'id' => (int)$n['product_id'],
+                'name' => $n['product_name'],
+                'price' => (float)$n['product_price'],
+                'image' => $n['product_img'],
+                'quantity' => (int)$n['item_quantity']
+            );
+        }
+    }
+?>
+
 <script>
-// ---- LOAD CART FROM LOCALSTORAGE (same source as shopping_cart.php) ----
-const cartItems = JSON.parse(localStorage.getItem('cart')) || [];
+// ---- LOAD CART FROM db (same source as shopping_cart.php) ----
+let cartItems = <?php echo json_encode($cart_items_array); ?>;
 
 const SHIPPING_FEE = 5.00;
 
@@ -98,14 +132,21 @@ function updateSummary() {
     totalEl.textContent = `RM${total.toFixed(2)}`;
 }
 
-// ---- PAY BUTTON (placeholder — no backend yet) ----
+// ---- PAY BUTTON ----
 payBtn.addEventListener('click', () => {
-    alert('Payment successful! (placeholder — no backend yet)');
-
-    // Clear the cart after "payment"
-    localStorage.removeItem('cart');
-
-    window.location.href = 'index.php';
+    fetch('clear_cart.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('Payment successful!');
+            window.location.href = 'index.php';
+        } else {
+            alert('Something went wrong finishing your order.');
+        }
+    });
 });
 
 // ---- INITIAL RENDER ----

@@ -2,7 +2,7 @@
 
 include('connection.php');
 
-$check_user = "select username from users
+$check_user = "select * from users
 where username = '".$_SESSION['username']."'";
 
 $execute_query = mysqli_query($condb, $check_user);

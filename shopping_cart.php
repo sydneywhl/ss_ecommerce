@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <title>Shopping Cart</title>
+    <title>Shopping Cart | SS_ECOMMERCE</title>
 </head>
 <body class="cart-body">
     <header class="index-header">
@@ -20,7 +20,7 @@
 
         <div class="header-icons">
             <a href="shopping_cart.php"><i class="fas fa-shopping-cart"></i></a>
-            <a href="log_in.php"><i class="fas fa-user"></i></a>
+            <a href="log_out.php"><i class="fas fa-user"></i></a>
         </div>
     </header>
 
@@ -48,37 +48,49 @@
                         <span>Total</span>
                         <span id="total">RM0.00</span>
                     </div>
-                    <a href="checkout.php" class="checkout-btn">Proceed to Checkout</a>
+                    <button class="checkout-btn" id="checkoutBtn">Proceed to Checkout</button>
                     <a href="index.php" class="continue-shopping">Continue Shopping</a>
                 </aside>
             </div>
 
 <?php
+    session_start();
     include("connection.php");
     include("session_check.php");
 
     $load_user_id = "select user_id from users where username = '".$_SESSION['username']."'";
     $execute_user_id = mysqli_query($condb, $load_user_id);
+    $user_row = mysqli_fetch_assoc($execute_user_id);
+    $user_id = $user_row['user_id'];
 
-    $load_shopping_cart = "select cart_item.product_id, cart_item.item_quantity
-                            from cart_item, shopping_cart, users
-                            where cart_item.cart_id = shopping_cart.cart_id
-                            and users.user_id = shopping_cart.user_id
-                            and shopping_cart.user_id = '$execute_user_id';
-                            ";
-    $execute_shopping_cart = mysqli_query($condb, $load_shopping_cart)
+    $load_shopping_cart = "select product.product_id, product.product_name, product.product_price,
+                        product.product_img, cart_item.item_quantity
+                        from cart_item, shopping_cart, users, product
+                        where cart_item.cart_id = shopping_cart.cart_id
+                        and users.user_id = shopping_cart.user_id
+                        and cart_item.product_id = product.product_id
+                        and shopping_cart.user_id = '$user_id'";
+    $execute_shopping_cart = mysqli_query($condb, $load_shopping_cart);
+
+    $cart_items_array = [];
+
+    if (mysqli_num_rows($execute_shopping_cart) > 0){
+        while ($n = mysqli_fetch_array($execute_shopping_cart)){
+            $cart_items_array[] = array(
+                'id' => (int)$n['product_id'],
+                'name' => $n['product_name'],
+                'price' => (float)$n['product_price'],
+                'image' => $n['product_img'],
+                'quantity' => (int)$n['item_quantity']
+            );
+        }
+    }
 ?>
 
 
 
 <script>
-// ---- PLACEHOLDER DATA ----
-// replace this with data fetched from the backend/session/database,
-// e.g. const cartItems = await fetch('/api/cart').then(res => res.json());
-const cartItems = <?php echo json_encode($categories_array); ?>
-
-// ---- LOAD CART FROM LOCALSTORAGE (instead of hardcoded placeholder array) ----
-let cartItems = JSON.parse(localStorage.getItem('cart')) || [];
+let cartItems = <?php echo json_encode($cart_items_array); ?>;
 
 const SHIPPING_FEE = 5.00;
 
@@ -86,11 +98,8 @@ const cartItemsContainer = document.getElementById('cartItems');
 const subtotalEl = document.getElementById('subtotal');
 const shippingEl = document.getElementById('shipping');
 const totalEl = document.getElementById('total');
+const checkoutBtn = document.getElementById('checkoutBtn');
 
-// ---- HELPER: save current cart state back to localStorage ----
-function saveCart() {
-    localStorage.setItem('cart', JSON.stringify(cartItems));
-}
 
 function renderCart() {
     if (cartItems.length === 0) {
@@ -98,8 +107,11 @@ function renderCart() {
         subtotalEl.textContent = "RM0.00";
         shippingEl.textContent = "RM0.00";
         totalEl.textContent = "RM0.00";
+        checkoutBtn.disabled = true;
         return;
     }
+
+    checkoutBtn.disabled = false;
 
     cartItemsContainer.innerHTML = cartItems.map(item => `
         <div class="cart-item" data-id="${item.id}">
@@ -121,6 +133,7 @@ function renderCart() {
     updateSummary();
 }
 
+
 function updateSummary() {
     const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const shipping = cartItems.length > 0 ? SHIPPING_FEE : 0;
@@ -140,17 +153,55 @@ cartItemsContainer.addEventListener('click', (e) => {
     if (!item) return;
 
     if (e.target.classList.contains('increase')) {
-        item.quantity++;
+        updateQuantity(id, 1);
     } else if (e.target.classList.contains('decrease')) {
-        item.quantity--;
-        if (item.quantity <= 0) {
-            cartItems = cartItems.filter(p => p.id !== id);
-        }
+        updateQuantity(id, -1);
     } else if (e.target.closest('.remove-btn')) {
-        cartItems = cartItems.filter(p => p.id !== id);
+        removeItem(id);
     }
+});
 
-    renderCart();
+function updateQuantity(productId, change) {
+    fetch('update_cart_item.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: productId, change: change })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.success) {
+            alert(data.message || 'Could not update cart.');
+            return;
+        }
+        const item = cartItems.find(p => p.id === productId);
+        if (data.removed) {
+            cartItems = cartItems.filter(p => p.id !== productId);
+        } else {
+            item.quantity = data.new_quantity;
+        }
+        renderCart();
+    });
+}
+
+function removeItem(productId) {
+    fetch('remove_cart_item.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: productId })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            cartItems = cartItems.filter(p => p.id !== productId);
+            renderCart();
+        }
+    });
+}
+
+checkoutBtn.addEventListener('click', () => {
+    if (cartItems.length > 0) {
+        window.location.href = 'checkout.php';
+    }
 });
 
 // ---- INITIAL RENDER ----
@@ -159,9 +210,3 @@ renderCart();
 
     </section>
 </main>
-
-<!--everywhere you see localStorage.setItem('cart', ...) in the code, 
-that's a placeholder for what will eventually be a fetch() call to your friend's PHP backend. 
-The moment that backend exists, you'd swap those localStorage lines for real API calls, 
-and barely touch the rest of your rendering logic.
--->

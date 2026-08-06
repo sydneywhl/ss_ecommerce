@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <title>SS_ECOMMERCE</title>
+    <title>Catalogue | SS_ECOMMERCE</title>
 </head>
 <body class="index-body">
     <header class="index-header">
@@ -20,7 +20,7 @@
 
         <div class="header-icons">
             <a href="shopping_cart.php"><i class="fas fa-shopping-cart"></i></a>
-            <a href="log_in.php"><i class="fas fa-user"></i></a>
+            <a href="log_out.php"><i class="fas fa-user"></i></a>
         </div>
     </header>
 
@@ -205,19 +205,24 @@ const closeModal = document.getElementById('closeModal');
 
 // ---- OPEN MODAL ----
 function openProductModal(product) {
+    const outOfStock = product.product_quantity <= 0;
+
     modalDetails.innerHTML = `
         <div class="modal-flex">
             <img src="${product.product_img}" alt="${product.product_name}">
             <div class="modal-info">
                 <h2>${product.product_name}</h2>
                 <p class="modal-price">RM${product.product_price.toFixed(2)}</p>
+                <p class="modal-quantity">Quantity: ${product.product_quantity}</p>
                 <p class="modal-desc">${product.product_desc || 'No description available.'}</p>
                 
                 <form action="shopping_cart.php" method="POST">
                     <input type="hidden" name="product_id" value="${product.product_id}">
                     <input type="hidden" name="action" value="add">
-                    <button type="button" class="add-to-cart-btn" onclick="addToCart(${product.product_id})">
-                        Add to Cart
+                    <button type="button" class="add-to-cart-btn" 
+                        onclick="addToCart(${product.product_id})"
+                        ${outOfStock ? 'disabled' : ''}>
+                        ${outOfStock ? 'Out of Stock' : 'Add to Cart'}
                     </button>
                 </form>
             </div>
@@ -255,40 +260,31 @@ categoryList.addEventListener('click', (e) => {
 
 // ---- CART ACTION EXECUTOR ----
 function addToCart(productId) {
-    // Placeholder check — replace with real session/login check later
-    const isLoggedIn = false; // your friend will replace this with a real PHP session check
+    const isLoggedIn = <?php echo isset($_SESSION['username']) ? 'true' : 'false'; ?>;
 
     if (!isLoggedIn) {
         alert('Please log in to add items to your cart.');
         window.location.href = 'log_in.php';
         return;
     }
-    
-    const product = products.find(p => p.product_id === productId);
-    if (!product) return;
 
-    // Get existing cart from localStorage, or start a new one
-    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+    fetch('add_to_cart.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: productId, quantity: 1 })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            const product = products.find(p => p.product_id === productId);
+            product.product_quantity -= 1; // keep local data in sync with DB
 
-    // Check if this product is already in the cart
-    const existingItem = cart.find(item => item.id === product.product_id);
-
-    if (existingItem) {
-        existingItem.quantity++;
-    } else {
-        cart.push({
-            id: product.product_id,
-            name: product.product_name,
-            price: product.product_price,
-            image: product.product_img,
-            quantity: 1
-        });
-    }
-
-    localStorage.setItem('cart', JSON.stringify(cart));
-
-    alert(`${product.product_name} added to cart!`);
-    productModal.style.display = 'none'; // close modal after adding
+            alert(`${product.product_name} added to cart!`);
+            openProductModal(product); // re-render modal with the updated quantity
+        } else {
+            alert(data.message || 'Something went wrong.');
+        }
+    });
 }
 
 // ---- RUN ----
