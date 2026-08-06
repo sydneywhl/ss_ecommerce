@@ -8,15 +8,10 @@
     <title>Checkout | SS_ECOMMERCE</title>
 </head>
 <body class="checkout-body">
-    <header class="index-header">
+    <header class="cart-header">
         <div class="logo">
             <h1>SS E-Commerce</h1>
         </div>
-
-        <form class="search-bar" action="" method="GET">
-            <input type="text" name="search" placeholder="Search products...">
-            <button type="submit"><i class="fas fa-search"></i></button>
-        </form>
 
         <div class="header-icons">
             <a href="shopping_cart.php"><i class="fas fa-shopping-cart"></i></a>
