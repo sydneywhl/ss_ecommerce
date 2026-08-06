@@ -213,7 +213,7 @@ function openProductModal(product) {
                 <p class="modal-price">RM${product.product_price.toFixed(2)}</p>
                 <p class="modal-desc">${product.product_desc || 'No description available.'}</p>
                 
-                <form action="shopping_cart.php" method="POST"> ***
+                <form action="shopping_cart.php" method="POST">
                     <input type="hidden" name="product_id" value="${product.product_id}">
                     <input type="hidden" name="action" value="add">
                     <button type="button" class="add-to-cart-btn" onclick="addToCart(${product.product_id})">

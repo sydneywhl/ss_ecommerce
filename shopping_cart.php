@@ -53,10 +53,29 @@
                 </aside>
             </div>
 
+<?php
+    include("connection.php");
+    include("session_check.php");
+
+    $load_user_id = "select user_id from users where username = '".$_SESSION['username']."'";
+    $execute_user_id = mysqli_query($condb, $load_user_id);
+
+    $load_shopping_cart = "select cart_item.product_id, cart_item.item_quantity
+                            from cart_item, shopping_cart, users
+                            where cart_item.cart_id = shopping_cart.cart_id
+                            and users.user_id = shopping_cart.user_id
+                            and shopping_cart.user_id = '$execute_user_id';
+                            ";
+    $execute_shopping_cart = mysqli_query($condb, $load_shopping_cart)
+?>
+
+
+
 <script>
 // ---- PLACEHOLDER DATA ----
 // replace this with data fetched from the backend/session/database,
 // e.g. const cartItems = await fetch('/api/cart').then(res => res.json());
+const cartItems = <?php echo json_encode($categories_array); ?>
 
 // ---- LOAD CART FROM LOCALSTORAGE (instead of hardcoded placeholder array) ----
 let cartItems = JSON.parse(localStorage.getItem('cart')) || [];
