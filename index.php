@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <title>Document</title>
+    <title>SS_ECOMMERCE</title>
 </head>
 <body class="index-body">
     <header class="index-header">
@@ -51,44 +51,64 @@
         </section> <!-- Fixed: Shifted section tag to properly wrap the layout elements -->
     </main>
 
+<?php
+    session_start();
+    include("connection.php");
+    include("session_check.php");
+
+    # load all data from the product table in the database
+    $load_product_data = "select product_id,product_name,product_price,product_quantity,
+                    product_img,product_desc,product.category_id, category.category_name
+                    from product, category
+                    where product.category_id = category.category_id";
+        
+    $execute_load = mysqli_query($condb, $load_product_data);
+
+    if(mysqli_num_rows($execute_load)>0){
+        while ($n = mysqli_fetch_array($execute_load)){
+            $products_array[]=array(
+                'product_id' => (int)$n['product_id'],
+                'product_name' => $n['product_name'],
+                'product_price' => (float)$n['product_price'],
+                'product_quantity' => (int)$n['product_quantity'],
+                'product_img' => $n['product_img'],
+                'product_desc' => $n['product_desc'],
+                'category_id' => (int)$n['category_id'],
+                'category_name' => $n['category_name']
+            );
+        }
+    }
+    else{
+        echo "No products found";
+    }
+
+# ----------------------------------------------------------------
+    # load all categories from category table
+    $categories_array = [];
+    # this is for loading all products regardless of category, UI-based (not in db)
+    $categories_array[] = array(
+    'category_id' => 0,
+    'category_name' => "All"
+    );
+    
+    $load_categories = "select * from category";
+    $execute_cat = mysqli_query($condb, $load_categories);
+
+    if(mysqli_num_rows($execute_cat)>0){
+        while ($n = mysqli_fetch_array($execute_cat)){
+            $categories_array[]=array(
+                'category_id' => (int)$n['category_id'],
+                'category_name' => $n['category_name']
+            );
+        }
+    }
+?>
+
 <script>
 // ---- PLACEHOLDER DATA ----
-const categories = [
-    { category_id: 0, category_name: "All" },
-    { category_id: 1, category_name: "Electronics" },
-    { category_id: 2, category_name: "Clothing" },
-    { category_id: 3, category_name: "Home" }
-];
+const categories = <?php echo json_encode($categories_array); ?>
 
-const products = [
-    {
-        product_id: 1,
-        product_name: "Wireless Headphones",
-        product_price: 49.99,
-        product_quantity: 25,
-        product_img: "https://placehold.co/400x500",
-        product_desc: "Comfortable over-ear wireless headphones with noise cancellation.",
-        category_id: 1
-    },
-    {
-        product_id: 2,
-        product_name: "Cotton T-Shirt",
-        product_price: 19.99,
-        product_quantity: 100,
-        product_img: "https://placehold.co/400x500",
-        product_desc: "Soft, breathable 100% cotton t-shirt.",
-        category_id: 2
-    },
-    {
-        product_id: 3,
-        product_name: "Desk Lamp",
-        product_price: 29.99,
-        product_quantity: 40,
-        product_img: "https://placehold.co/400x500",
-        product_desc: "Adjustable LED desk lamp with 3 brightness settings.",
-        category_id: 3
-    }
-];
+const products = <?php echo json_encode($products_array); ?>;
 
 // ---- HELPER: look up a category's name from its id ----
 function getCategoryName(category_id) {
@@ -193,7 +213,7 @@ function openProductModal(product) {
                 <p class="modal-price">RM${product.product_price.toFixed(2)}</p>
                 <p class="modal-desc">${product.product_desc || 'No description available.'}</p>
                 
-                <form action="shopping_cart.php" method="POST">
+                <form action="shopping_cart.php" method="POST"> ***
                     <input type="hidden" name="product_id" value="${product.product_id}">
                     <input type="hidden" name="action" value="add">
                     <button type="button" class="add-to-cart-btn" onclick="addToCart(${product.product_id})">
